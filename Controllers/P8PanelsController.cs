@@ -8,19 +8,23 @@ using System.Text;
 using System.Web.Mvc;
 using System.Xml;
 
+//MVC-контроллеры для обработки запросов от WEB-приложения "Парус 8 - Панели мониторинга" (и прочих клиентов)
 namespace P8PanelsParusOnlineExt.Controllers
 {
+    //Корневой контроллер
     public class P8PanelsController : Controller
     {
         private readonly IContextualParusDatabaseFactoryProvider _databaseProvider;
         private readonly static string _STATUS_ERR = "ERR";
         private readonly static string _STATUS_OK = "OK";
 
+        //Конструктор
         public P8PanelsController(IContextualParusDatabaseFactoryProvider databaseProvider)
         {
             _databaseProvider = databaseProvider;
         }
 
+        //Преобразование данных запроса в строку
         private string GetRequestContentAsString()
         {
             using (var receiveStream = Request.InputStream)
@@ -103,6 +107,7 @@ namespace P8PanelsParusOnlineExt.Controllers
             return MakeRespond(status: _STATUS_OK, payload: payload);
         }
 
+        //Обработка POST-запросов на P8Panels/Process
         [HttpPost]
         public ActionResult Process()
         {
@@ -129,6 +134,7 @@ namespace P8PanelsParusOnlineExt.Controllers
             }
         }
 
+        //Обработка POST-запросов на P8Panels/GetConfig
         [HttpPost]
         public ActionResult GetConfig()
         {

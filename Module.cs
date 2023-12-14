@@ -10,9 +10,11 @@ using System.Xml;
 using System.IO;
 using CommonActivities.Activities;
 
+//"Панели" - расширение для "ПАРУС 8 Онлайн" (библиотека для сервера приложений)
 namespace P8PanelsParusOnlineExt
 {
 
+    //Настройки расширения
     public class P8PanelConfig
     {
         private List<P8PanelMenuApp> _menuApps = new List<P8PanelMenuApp>();
@@ -23,13 +25,17 @@ namespace P8PanelsParusOnlineExt
 
         private string _panelsUrlBase;
 
+        //Конструктор
         public P8PanelConfig(string confiFileName)
         {
+            //Читаем указанный файл конфигурации как XML
             XmlDocument doc = new XmlDocument();
             doc.Load(confiFileName);
             XmlNode section = doc.DocumentElement.SelectSingleNode("/CITK.P8Panels");
+            //Обходим десериализованный XML
             foreach (XmlNode sectionNode in section.ChildNodes)
             {
+                //Настройки пунктов меню приложений
                 if (sectionNode.Name == "MenuItems")
                 {
                     foreach (XmlNode menuAppNode in sectionNode.ChildNodes)
@@ -50,6 +56,7 @@ namespace P8PanelsParusOnlineExt
                         }
                     }
                 }
+                //Настройки панелей
                 if (sectionNode.Name == "Panels")
                 {
                     _panelsUrlBase = sectionNode.Attributes["urlBase"].Value;
@@ -69,25 +76,32 @@ namespace P8PanelsParusOnlineExt
             }
         }
 
+        //Поиск панели в настройке по наименованию
         public P8Panel FindPanelByName(string name)
         {
             return _panels.Find(panel => panel.name == name);
         }
 
+        //Список приложений для подключения панелей
         public List<P8PanelMenuApp> menuApps { get => _menuApps; }
 
+        //Список подключаемых к приложениям пунктов меню панелей
         public List<P8PanelMenuItem> menuItems { get => _menuItems; }
 
+        //Настройки панелей
         public List<P8Panel> panels { get => _panels; }
 
+        //Базовый URL к WEB-приложению "Парус 8 - Панели мониторинга"
         public string panelsUrlBase { get => _panelsUrlBase; }
     }
 
+    //Приложение панели
     public class P8PanelMenuApp
     {
         public string name { get; set; }
     }
 
+    //Элемент меню панели
     public class P8PanelMenuItem
     {
         public string app { get; set; }
@@ -99,6 +113,7 @@ namespace P8PanelsParusOnlineExt
         public string panelName { get; set; }
     }
 
+    //Параметры панели
     public class P8Panel
     {
         public string name { get; set; }
@@ -109,6 +124,7 @@ namespace P8PanelsParusOnlineExt
         public bool showInPanelsList { get; set; }
     }
 
+    //Точка входа в модуль расширения
     public class Module : ExtensionModuleBase
     {
 
@@ -124,9 +140,12 @@ namespace P8PanelsParusOnlineExt
 
         public override bool HasViews => false;
 
+        //Конструктор
         public Module()
         {
+            //Читаем и десериализуем настройки
             P8PanelConfig pconf = new P8PanelConfig(_configFile);
+            //Вешаем хуки на создание элементов меню для всех упомянутых в настройках приложений
             pconf.menuApps.ForEach(menuApp => {
                 _hooks.Add(MainMenuProcessorHook.Make(menuApp.name, mainMenu => {
                     pconf.menuItems.ForEach(menuItem => {
@@ -139,6 +158,7 @@ namespace P8PanelsParusOnlineExt
                     return mainMenu;
                 }));
             });
+            //Вешаем хуки на нажатие всех сформированных элементов меню
             Dictionary<string, Func<Sequence>> menuItemsActions = new Dictionary<string, Func<Sequence>>();
             pconf.menuItems.ForEach(menuItem => {
                 if (!menuItem.separator)
@@ -162,6 +182,7 @@ namespace P8PanelsParusOnlineExt
             _hooks.Add(MainMenuItemBuilderHook.Make(menuItemsActions));
         }
 
+        //Путь к файлу конфигурации расширения
         public static string configFile { get => _configFile; }
     }
 }
